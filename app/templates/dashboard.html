@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Dashboard</title>
+
+<link rel="stylesheet"
+href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>
+
+Welcome {{ username }}
+
+</h1>
+
+<h3>
+
+Docker Login Application
+
+</h3>
+
+<hr>
+
+<p>
+
+You have successfully logged into the application.
+
+</p>
+
+<br>
+
+<table>
+
+<tr>
+
+<td>
+
+Username
+
+</td>
+
+<td>
+
+{{ username }}
+
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+
+Status
+
+</td>
+
+<td>
+
+Online
+
+</td>
+
+</tr>
+
+</table>
+
+<br>
+
+<a href="/logout" class="logout-btn">
+
+Logout
+
+</a>
+
+</div>
+
+</body>
+
+</html>

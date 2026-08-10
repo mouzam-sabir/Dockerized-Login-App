@@ -1,0 +1,8 @@
+FROM nginx:stable-alpine3.24-perl
+
+WORKDIR /usr/share/nginx/html
+
+COPY index.html .
+COPY style.css .
+
+EXPOSE 80

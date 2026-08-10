@@ -1,0 +1,58 @@
+services:
+
+  web:
+    image: custom-nginx:latest
+    build: ./nginx
+    container_name: custom-nginx
+
+    ports:
+      - "8080:80"
+
+    networks:
+      - devops-net
+
+  app:
+    image: flask-login-app:latest
+    build: ./app
+    container_name: flask-app
+
+    ports:
+    - "5000:5000"
+
+    networks:
+    - devops-net
+
+    depends_on:
+    - db
+
+  client:
+    image: ubuntu:latest
+    build: ./ubuntu
+    container_name: ubuntu
+
+    tty: true
+
+    networks:
+      - devops-net
+
+  db:
+    image: mysql:latest
+    container_name: mysql-db
+
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: docker_login
+
+    volumes:
+    - mysql-data:/var/lib/mysql
+
+    networks:
+    - devops-net
+
+volumes:
+
+  mysql-data:
+
+networks:
+
+  devops-net:
