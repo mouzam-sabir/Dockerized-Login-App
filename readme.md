@@ -1,1064 +1,511 @@
-\# Dockerized Login Application
+# Dockerized Login Application
 
+A multi-container Login and Registration Web Application built with Flask, MySQL, Nginx, Ubuntu, Docker, and Docker Compose.
 
+## Project Overview
 
-A containerized login and registration application built with \*\*Flask, MySQL, Nginx, Ubuntu, and Docker Compose\*\*.
+This project demonstrates practical Docker and DevOps concepts by running a web application as multiple interconnected containers.
 
+### Features
 
+- User registration
+- User login
+- Dashboard
+- Logout
+- MySQL database
+- Password hashing
+- Custom Docker images
+- Dockerfiles
+- Docker Compose
+- Docker networking
+- Persistent Docker volume
+- Ubuntu container for network testing
+- Nginx web server
 
-The project demonstrates how multiple Docker containers can communicate through a custom Docker network while persistent MySQL storage is maintained through a Docker volume.
+## Architecture
 
+    User
+      |
+      v
+    Nginx
+      |
+      v
+    Flask Application
+      |
+      v
+    MySQL Database
+      |
+      v
+    Docker Volume
 
+All containers communicate through the custom Docker network:
 
-\## Project Overview
+    devops-net
 
+## Services
 
+### Flask Application
 
-This project contains:
+The Flask container runs the backend application and handles authentication and database communication.
 
+- Image: `flask-login-app:latest`
+- Container: `flask-app`
+- Port: `5000`
+- Base image: `python:3.12-slim`
 
+Application:
 
-\* Flask web application for Login, Registration, Dashboard, and Logout
+    http://localhost:5000
 
-\* MySQL database for storing user accounts
+### MySQL Database
 
-\* Nginx web server
+MySQL stores the registered user data.
 
-\* Ubuntu client container for network testing
+- Image: `mysql:latest`
+- Container: `mysql-db`
+- Database: `docker_login`
 
-\* Dockerfiles for custom Flask, Nginx, and Ubuntu images
+Persistent storage:
 
-\* Docker Compose for managing all services
+    mysql-data:/var/lib/mysql
 
-\* Custom Docker network for container-to-container communication
+### Nginx
 
-\* Persistent MySQL storage using Docker volumes
+Nginx is used as the web server for the frontend.
 
-\* Password hashing using Werkzeug
+- Image: `custom-nginx:latest`
+- Container: `custom-nginx`
+- Container port: `80`
+- Host port: `8080`
 
+Application:
 
+    http://localhost:8080
 
-\## Architecture
+### Ubuntu Client
 
+The Ubuntu container is used for practicing and testing Docker networking.
 
+- Image: `ubuntu:latest`
+- Container: `ubuntu`
+- Tool: `iputils-ping`
 
-```text
+Example:
 
-&#x20;                   Docker Compose
+    docker exec -it ubuntu bash
+    ping db
 
-&#x20;                        |
+## Docker Network
 
-&#x20;       +----------------+----------------+
+The containers communicate through:
 
-&#x20;       |                |                |
+    devops-net
 
-&#x20;       v                v                v
+The Flask application connects to MySQL using the Docker Compose service name:
 
-&#x20;    Nginx             Flask            MySQL
+    db
 
-&#x20;  Container          Container         Container
+It does not use `localhost` because `localhost` inside a container refers to that same container.
 
-&#x20;     :80               :5000              |
+Docker provides internal DNS so services can communicate using their service names.
 
-&#x20;       |                 |                |
+Example:
 
-&#x20;       |                 +----------------+
+    Flask Container
+          |
+          | db
+          v
+    MySQL Container
 
-&#x20;       |                         |
-
-&#x20;       |                    docker\_login
-
-&#x20;       |                     database
-
-&#x20;       |
-
-&#x20;       v
-
-&#x20;  Host Port 8080
-
-
-
-&#x20;                Ubuntu Client
-
-&#x20;                      |
-
-&#x20;                devops-net
-
-```
-
-
-
-\## Services
-
-
-
-\### 1. Nginx
-
-
-
-Nginx serves the frontend page.
-
-
-
-\* Image: `custom-nginx:latest`
-
-\* Base image: `nginx:stable-alpine3.24-perl`
-
-\* Container: `custom-nginx`
-
-\* Container port: `80`
-
-\* Host port: `8080`
-
-
-
-Access:
-
-
-
-```text
-
-http://localhost:8080
-
-```
-
-
-
-\### 2. Flask Application
-
-
-
-The Flask application handles:
-
-
-
-\* User registration
-
-
-
-\* User login
-
-
-
-\* Dashboard
-
-
-
-\* Logout
-
-
-
-\* MySQL database communication
-
-
-
-\* Image: `flask-login-app:latest`
-
-
-
-\* Base image: `python:3.12-slim`
-
-
-
-\* Container: `flask-app`
-
-
-
-\* Container port: `5000`
-
-
-
-\* Host port: `5000`
-
-
-
-Access:
-
-
-
-```text
-
-http://localhost:5000
-
-```
-
-
-
-\### 3. MySQL
-
-
-
-MySQL stores registered users.
-
-
-
-\* Image: `mysql:latest`
-
-\* Container: `mysql-db`
-
-\* Database: `docker\_login`
-
-\* Username: `root`
-
-\* Password: `root123`
-
-
-
-MySQL data is persisted using:
-
-
-
-```text
-
-mysql-data:/var/lib/mysql
-
-```
-
-
-
-This means deleting the MySQL container does not automatically delete the stored database data as long as the Docker volume remains.
-
-
-
-\### 4. Ubuntu Client
-
-
-
-An Ubuntu container is included for practicing Docker networking and testing communication between containers.
-
-
-
-\* Image: `ubuntu:latest`
-
-\* Container: `ubuntu`
-
-\* Additional package: `iputils-ping`
-
-
-
-\## Docker Network
-
-
-
-All services are connected to a custom Docker network:
-
-
-
-```text
-
-devops-net
-
-```
-
-
-
-This allows containers to communicate with each other using their service/container names.
-
-
-
-For example, the Flask application connects to MySQL using:
-
-
-
-```text
-
-host = db
-
-```
-
-
-
-Instead of using:
-
-
-
-```text
-
-localhost
-
-```
-
-
-
-Inside the Docker network, `db` resolves to the MySQL service.
-
-
-
-\## Data Storage
-
-
+## Database Storage
 
 MySQL uses a named Docker volume:
 
+    mysql-data
 
+The volume is mounted inside the MySQL container at:
 
-```yaml
+    /var/lib/mysql
 
-volumes:
+Storage flow:
 
-&#x20; mysql-data:
+    Flask
+      |
+      v
+    MySQL Container
+      |
+      v
+    docker_login Database
+      |
+      v
+    mysql-data Volume
 
-```
+The volume keeps database data persistent when the MySQL container is recreated.
 
+## Password Security
 
+Passwords are not stored as plain text.
 
-The volume is mounted at:
+The Flask application uses Werkzeug password hashing.
 
+During registration:
 
-
-```text
-
-/var/lib/mysql
-
-```
-
-
-
-Architecture:
-
-
-
-```text
-
-Flask
-
-&#x20; |
-
-&#x20; v
-
-MySQL Container
-
-&#x20; |
-
-&#x20; v
-
-docker\_login database
-
-&#x20; |
-
-&#x20; v
-
-mysql-data Docker Volume
-
-```
-
-
-
-\## Password Security
-
-
-
-User passwords are \*\*not stored as plain text\*\*.
-
-
-
-The Flask application uses Werkzeug password hashing:
-
-
-
-```python
-
-generate\_password\_hash(password)
-
-```
-
-
-
-During login, the submitted password is verified against the stored hash using:
-
-
-
-```python
-
-check\_password\_hash()
-
-```
-
-
-
-Flow:
-
-
-
-```text
-
-User Password
-
-&#x20;     |
-
-&#x20;     v
-
-generate\_password\_hash()
-
-&#x20;     |
-
-&#x20;     v
-
-Password Hash
-
-&#x20;     |
-
-&#x20;     v
-
-MySQL
-
-```
-
-
+    generate_password_hash(password)
 
 During login:
 
+    check_password_hash()
 
+Authentication flow:
 
-```text
+    User Password
+          |
+          v
+    generate_password_hash()
+          |
+          v
+    Password Hash
+          |
+          v
+    MySQL
 
-Entered Password
+During login, the entered password is compared with the stored hash.
 
-&#x20;     |
+## Project Structure
 
-&#x20;     v
+    Docker-Login-App/
+    |
+    +-- app/
+    |   +-- app.py
+    |   +-- dockerfile
+    |   +-- requirements.txt
+    |   +-- static/
+    |   |   +-- style.css
+    |   +-- templates/
+    |       +-- login.html
+    |       +-- register.html
+    |       +-- dashboard.html
+    |
+    +-- nginx/
+    |   +-- dockerfile
+    |   +-- index.html
+    |   +-- style.css
+    |
+    +-- ubuntu/
+    |   +-- dockerfile
+    |
+    +-- docker-compose.yml
+    +-- README.md
 
-check\_password\_hash()
+## Flask Dockerfile
 
-&#x20;     |
+    FROM python:3.12-slim
 
-&#x20;     v
+    WORKDIR /app
 
-Match / Reject
+    COPY requirements.txt .
 
-```
+    RUN pip install --no-cache-dir -r requirements.txt
 
+    COPY . .
 
+    EXPOSE 5000
 
-\## Project Structure
+    CMD ["python", "app.py"]
 
+## Nginx Dockerfile
 
+    FROM nginx:stable-alpine3.24-perl
 
-```text
+    WORKDIR /usr/share/nginx/html
 
-Docker-Login-App/
+    COPY index.html .
+    COPY style.css .
 
-│
+    EXPOSE 80
 
-├── app/
+## Ubuntu Dockerfile
 
-│   ├── app.py
+    FROM ubuntu:latest
 
-│   ├── dockerfile
+    RUN apt-get update && apt-get install -y iputils-ping
 
-│   ├── requirements.txt
+    CMD ["bash"]
 
-│   │
+## Docker Compose
 
-│   ├── static/
+Docker Compose manages all application services from a single `docker-compose.yml` file.
 
-│   │   └── style.css
+### Build and Start
 
-│   │
+    docker compose up -d --build
 
-│   └── templates/
+### Check Services
 
-│       ├── login.html
+    docker compose ps
 
-│       ├── register.html
+### View Logs
 
-│       └── dashboard.html
+    docker compose logs
 
-│
+### Follow Logs
 
-├── nginx/
+    docker compose logs -f
 
-│   ├── dockerfile
+### Stop Services
 
-│   ├── index.html
+    docker compose stop
 
-│   └── style.css
+### Start Services
 
-│
+    docker compose start
 
-├── ubuntu/
+### Restart Services
 
-│   └── dockerfile
+    docker compose restart
 
-│
+### Remove Containers and Network
 
-├── docker-compose.yml
+    docker compose down
 
-└── readme.md
+### Remove Containers and Volumes
 
-```
+    docker compose down -v
 
+> Be careful with `docker compose down -v` because it removes the MySQL volume and its stored database data.
 
+## Useful Docker Commands
 
-\## Dockerfile – Flask
-
-
-
-The Flask Dockerfile:
-
-
-
-```dockerfile
-
-FROM python:3.12-slim
-
-
-
-WORKDIR /app
-
-
-
-COPY requirements.txt .
-
-
-
-RUN pip install --no-cache-dir -r requirements.txt
-
-
-
-COPY . .
-
-
-
-EXPOSE 5000
-
-
-
-CMD \["python", "app.py"]
-
-```
-
-
-
-\## Dockerfile – Nginx
-
-
-
-```dockerfile
-
-FROM nginx:stable-alpine3.24-perl
-
-
-
-WORKDIR /usr/share/nginx/html
-
-
-
-COPY index.html .
-
-COPY style.css .
-
-
-
-EXPOSE 80
-
-```
-
-
-
-\## Dockerfile – Ubuntu
-
-
-
-```dockerfile
-
-FROM ubuntu:latest
-
-
-
-RUN apt-get update \&\& apt-get install -y iputils-ping
-
-
-
-CMD \["bash"]
-
-```
-
-
-
-\## Docker Compose
-
-
-
-All services are managed through:
-
-
-
-```text
-
-docker-compose.yml
-
-```
-
-
-
-Start the complete application with:
-
-
-
-```bash
-
-docker compose up -d
-
-```
-
-
-
-Check running containers:
-
-
-
-```bash
-
-docker compose ps
-
-```
-
-
-
-View logs:
-
-
-
-```bash
-
-docker compose logs
-
-```
-
-
-
-View logs for a specific service:
-
-
-
-```bash
-
-docker compose logs app
-
-```
-
-
-
-Stop the project:
-
-
-
-```bash
-
-docker compose stop
-
-```
-
-
-
-Restart the project:
-
-
-
-```bash
-
-docker compose restart
-
-```
-
-
-
-Stop and remove containers and network:
-
-
-
-```bash
-
-docker compose down
-
-```
-
-
-
-\## Useful Docker Commands
-
-
-
-List containers:
-
-
-
-```bash
-
-docker ps
-
-```
-
-
-
-List all containers:
-
-
-
-```bash
-
-docker ps -a
-
-```
-
-
+### Images
 
 List images:
 
+    docker images
 
+Pull an image:
 
-```bash
+    docker pull mysql:latest
 
-docker images
+Build an image:
 
-```
+    docker build -t my-python-app .
 
+Tag an image:
 
+    docker tag my-python-app username/my-python-app:v1
 
-List networks:
+Remove an image:
 
+    docker rmi IMAGE_ID
 
+Inspect an image:
 
-```bash
+    docker image inspect IMAGE_NAME
 
-docker network ls
+### Containers
 
-```
+List running containers:
 
+    docker ps
 
+List all containers:
 
-Inspect the Docker network:
+    docker ps -a
 
+Run a container:
 
+    docker run nginx
 
-```bash
+Run in detached mode:
 
-docker network inspect devops-net
+    docker run -d nginx
 
-```
+Stop a container:
 
+    docker stop CONTAINER_NAME
 
+Start a container:
+
+    docker start CONTAINER_NAME
+
+Restart a container:
+
+    docker restart CONTAINER_NAME
+
+Remove a container:
+
+    docker rm CONTAINER_NAME
+
+View container logs:
+
+    docker logs CONTAINER_NAME
+
+Access a running container:
+
+    docker exec -it CONTAINER_NAME bash
+
+### Volumes
 
 List volumes:
 
+    docker volume ls
 
+Create a volume:
 
-```bash
+    docker volume create my-volume
 
-docker volume ls
+Inspect a volume:
 
-```
+    docker volume inspect mysql-data
 
+Remove a volume:
 
+    docker volume rm my-volume
 
-Inspect the MySQL volume:
+### Networks
 
+List networks:
 
+    docker network ls
 
-```bash
+Inspect a network:
 
-docker volume inspect mysql-data
+    docker network inspect devops-net
 
-```
+Create a network:
 
+    docker network create my-network
 
+Connect a container:
 
-Access the Flask container:
+    docker network connect my-network CONTAINER_NAME
 
+Disconnect a container:
 
+    docker network disconnect my-network CONTAINER_NAME
 
-```bash
+## How to Run the Project
 
-docker exec -it flask-app bash
-
-```
-
-
-
-Access the Ubuntu container:
-
-
-
-```bash
-
-docker exec -it ubuntu bash
-
-```
-
-
-
-\## How to Run
-
-
-
-\### Prerequisites
-
-
+### Prerequisites
 
 Install:
 
-
-
-\* Docker Desktop
-
-\* Docker Compose
-
-
+- Docker Desktop
+- Docker Compose
+- Git
 
 Verify Docker:
 
-
-
-```bash
-
-docker --version
-
-```
-
-
+    docker --version
 
 Verify Docker Compose:
 
+    docker compose version
 
+Verify Git:
 
-```bash
+    git --version
 
-docker compose version
+### Clone Repository
 
-```
+    git clone <your-repository-url>
 
+Enter the project directory:
 
+    cd Docker-Login-App
 
-\### Start Application
+### Build and Start
 
+    docker compose up -d --build
 
+Check the running services:
 
-Clone the repository:
+    docker compose ps
 
+## Access the Application
 
+Flask:
 
-```bash
+    http://localhost:5000
 
-git clone <your-repository-url>
+Nginx:
 
-```
+    http://localhost:8080
 
+## Test Container Networking
 
+Enter the Ubuntu container:
 
-Move into the project directory:
+    docker exec -it ubuntu bash
 
+Test MySQL connectivity:
 
+    ping db
 
-```bash
+Test Flask connectivity:
 
-cd Docker-Login-App
+    ping app
 
-```
+This demonstrates container-to-container communication through the Docker network.
 
+## Technologies Used
 
+- Python
+- Flask
+- MySQL
+- Nginx
+- Ubuntu
+- Docker
+- Docker Compose
+- Docker Networking
+- Docker Volumes
+- Werkzeug Password Hashing
 
-Start all containers:
+## DevOps Concepts Demonstrated
 
+- Containerization
+- Docker Images
+- Docker Containers
+- Dockerfiles
+- Docker Compose
+- Multi-container applications
+- Custom Docker images
+- Docker networking
+- Docker volumes
+- Persistent database storage
+- Environment variables
+- Service dependencies
+- Container-to-container communication
+- Application-to-database communication
+- Password hashing
+- Docker CLI
+- Container troubleshooting
 
+## Future Improvements
 
-```bash
+- GitLab CI/CD
+- GitLab Runner
+- Automated testing
+- SAST
+- DAST
+- SCA
+- Secret Detection
+- Container Scanning
+- Nginx reverse proxy
+- Gunicorn
+- HTTPS/SSL
+- Docker Hub image publishing
+- GitLab Container Registry
+- Cloud deployment
+- Kubernetes
+- Monitoring and logging
 
-docker compose up -d
+## Author
 
-```
+**Muhammad Mouzam Sabir**
 
+DevOps / DevSecOps
 
+## Project Goal
 
-Check the services:
-
-
-
-```bash
-
-docker compose ps
-
-```
-
-
-
-Open:
-
-
-
-```text
-
-http://localhost:8080
-
-```
-
-
-
-or:
-
-
-
-```text
-
-http://localhost:5000
-
-```
-
-
-
-\## Container Communication
-
-
-
-The application demonstrates Docker container networking:
-
-
-
-```text
-
-Flask Container
-
-&#x20;     |
-
-&#x20;     | MySQL connection
-
-&#x20;     v
-
-MySQL Container
-
-```
-
-
-
-The Flask application connects using the Compose service name:
-
-
-
-```text
-
-db
-
-```
-
-
-
-All containers share:
-
-
-
-```text
-
-devops-net
-
-```
-
-
-
-\## Technologies Used
-
-
-
-\* Python
-
-\* Flask
-
-\* MySQL
-
-\* Nginx
-
-\* Ubuntu
-
-\* Docker
-
-\* Docker Compose
-
-\* Docker Networking
-
-\* Docker Volumes
-
-\* Werkzeug Password Hashing
-
-
-
-\## DevOps Concepts Demonstrated
-
-
-
-This project provides practical experience with:
-
-
-
-\* Containerization
-
-\* Docker Images
-
-\* Docker Containers
-
-\* Dockerfiles
-
-\* Docker Compose
-
-\* Multi-container applications
-
-\* Container Networking
-
-\* Docker Volumes
-
-\* Persistent Database Storage
-
-\* Custom Images
-
-\* Environment Variables
-
-\* Service Dependencies
-
-\* Application-to-Database Communication
-
-\* Password Hashing
-
-
-
-\## Future Improvements
-
-
-
-Possible improvements for a production-ready version:
-
-
-
-\* Move database credentials to environment variables or Docker secrets
-
-\* Use a production WSGI server such as Gunicorn
-
-\* Configure Nginx as a reverse proxy
-
-\* Remove Flask debug mode
-
-\* Add health checks
-
-\* Add CI/CD using GitLab
-
-\* Add SAST, SCA, and DAST security scanning
-
-\* Push application images to Docker Hub or GitLab Container Registry
-
-\* Deploy the application to a cloud server
-
-\* Add HTTPS with SSL/TLS
-
-
-
-\## Author
-
-
-
-\*\*Muhammad Mouzam Sabir\*\*
-
-
-
-DevOps Enthusiast 
-
-
-
-
-
+The goal of this project is to understand how a real-world web application can be containerized as multiple interconnected Docker services while maintaining persistent database storage, container networking, and secure password handling.
