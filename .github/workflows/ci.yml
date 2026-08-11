@@ -1,0 +1,20 @@
+name: Login App CI/CD
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build docker image
+        run: docker build -t login-app
+
+      - name: Build Sucessfull
+        run: echo "Docker image build successfully"
