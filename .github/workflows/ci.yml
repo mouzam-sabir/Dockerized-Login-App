@@ -6,15 +6,65 @@ on:
       - main
 
 jobs:
+
+  # ================= BUILD =================
+
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: checkout repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Build docker image
+      - name: Build Docker image
         run: docker build -t login-app ./app
 
-      - name: Build Sucessfull
-        run: echo "Docker image build successfully"
+      - name: Build successful
+        run: echo "Docker image built successfully!"
+
+
+  # ================= TEST =================
+
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build image for testing
+        run: docker build -t login-app ./app
+
+      - name: Run application
+        run: docker run -d --name login-app -p 5000:5000 login-app
+
+      - name: Test application
+        run: curl http://localhost:5000
+
+      - name: Stop container
+        run: docker stop login-app
+
+
+  # ================= DEPLOY =================
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build image for deployment
+        run: docker build -t login-app ./app
+
+      - name: Deploy application
+        run: |
+          docker run -d \
+            --name login-app \
+            -p 5000:5000 \
+            login-app
+
+      - name: Deployment successful
+        run: echo "Application deployed successfully!"
