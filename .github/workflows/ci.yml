@@ -39,6 +39,9 @@ jobs:
       - name: Run application
         run: docker run -d --name login-app -p 5000:5000 login-app
 
+      - name: Wait for app to be ready
+        run: sleep 5
+
       - name: Test application
         run: curl http://localhost:5000
 
